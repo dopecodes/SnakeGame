@@ -100,9 +100,10 @@ public class Snake extends JFrame implements ActionListener, KeyListener {
 						.getWidth() / SCALE), rand.nextInt(this
 						.getContentPane().getHeight() / SCALE));
 				for (Point point : SnakeParts) {
-					if (point.equals(cherry))
+					if (point.equals(cherry)) {
 						cherry = null;
 						break;
+					}
 				}
 			}
 			if (cherry != null)
