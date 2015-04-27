@@ -7,7 +7,7 @@ import javax.swing.*;
 @SuppressWarnings("serial")
 public class Snake extends JFrame implements ActionListener, KeyListener {
 
-	public static final int SCALE = 30, COLUMN = 40, ROW = 30, SPEED = 60;
+	public static final int SCALE = 30, ROW = 30, COLUMN = 40, SPEED = 60;
 
 	public static ArrayList<Point> SnakeParts = new ArrayList<Point>();
 	public static Point cherry;
@@ -31,7 +31,7 @@ public class Snake extends JFrame implements ActionListener, KeyListener {
 		this.addKeyListener(this);
 		this.setTitle("Snake");
 		this.setSize(WIDTH, HEIGHT);
-		this.setResizable(true);
+		this.setResizable(false);
 		this.setVisible(true);
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		this.setLocation((int) location.getWidth() / 2 - this.getWidth() / 2,
@@ -65,10 +65,10 @@ public class Snake extends JFrame implements ActionListener, KeyListener {
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (!over && !pause) {
+			render.repaint();
 			SnakeParts.add(new Point(head.x, head.y));
 			if (SnakeParts.size() > tailLength + 1)
 				SnakeParts.remove(0);
-			render.repaint();
 			if (direction == LEFT)
 				if (head.x - 1 >= 0 && !tailAt(head.x - 1, head.y)) {
 					head = new Point(head.x - 1, head.y);
@@ -100,7 +100,7 @@ public class Snake extends JFrame implements ActionListener, KeyListener {
 						.getWidth() / SCALE), rand.nextInt(this
 						.getContentPane().getHeight() / SCALE));
 				for (Point point : SnakeParts) {
-					if (point.equals(cherry)) {
+					if (cherry.equals(point)) {
 						cherry = null;
 						break;
 					}
@@ -147,7 +147,8 @@ public class Snake extends JFrame implements ActionListener, KeyListener {
 			if (!over)
 				if (!pause) {
 					pause = true;
-					scoreText = scoreText + "\t PAUSED";
+					if (!scoreText.contains("PAUSED"))
+						scoreText = scoreText + "\t PAUSED";
 					screenScore.setText(scoreText);
 					timer.stop();
 				} else {
