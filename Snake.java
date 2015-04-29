@@ -4,43 +4,69 @@ import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.*;
 
-@SuppressWarnings("serial")
-public class Snake extends JFrame implements ActionListener, KeyListener {
+public class Snake implements ActionListener, KeyListener {
 
-	public static final int SCALE = 30, ROW = 30, COLUMN = 40, SPEED = 60;
+	public static final int SCALE = 38, ROW = 25, COLUMN = 25, SPEED = 90;
+	public static final int DOWN = 0, UP = 1, RIGHT = 2, LEFT = 3;
 
 	public static ArrayList<Point> SnakeParts = new ArrayList<Point>();
 	public static Point cherry;
+	public static int direction = DOWN;
 
 	private String scoreText;
 	private Timer timer;
+	private JFrame frame = new JFrame("Snake");
 	private Random rand = new Random();
-	private JLabel screenScore = new JLabel();
+	private JSplitPane split = new JSplitPane();
+	private JPanel statsDisplay = new JPanel();
+	private JLabel pauseText = new JLabel();
+	private JLabel totalScore = new JLabel();
+	private JLabel cherryScore = new JLabel();
+	private JLabel cherryseaten = new JLabel();
 	private PaintGame render = new PaintGame();
 	private Dimension location = Toolkit.getDefaultToolkit().getScreenSize();
 	private Point head = new Point(0, 0);
 
 	private boolean over = false, pause = false, moved = true;
-	private final int DOWN = 0, UP = 1, RIGHT = 2, LEFT = 3,
-			HEIGHT = ROW * SCALE + 40, // insets top 37, bot 3
-			WIDTH = COLUMN * SCALE + 6; // insets left 3, right 3
-	private int direction = DOWN, tailLength = 1, score = 0;
+	private final int WIDTH = COLUMN * SCALE + 10 * SCALE,
+			HEIGHT = ROW * SCALE;
+	private int tailLength = 4, cherryValue = 100, score = 0;
 
 	Snake() {
 		timer = new Timer(SPEED, this);
-		this.addKeyListener(this);
-		this.setTitle("Snake");
-		this.setSize(WIDTH, HEIGHT);
-		this.setResizable(false);
-		this.setVisible(true);
-		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
-		this.setLocation((int) location.getWidth() / 2 - this.getWidth() / 2,
-				(int) location.getHeight() / 2 - this.getHeight() / 2);
-		screenScore.setFont(new Font("bestFont", Font.BOLD, SCALE));
-		render.add(screenScore);
-		this.add(render);
+		frame.addKeyListener(this);
+		frame.setSize(WIDTH, HEIGHT);
+		frame.setResizable(false);
+		frame.setVisible(true);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setLocation((int) location.getWidth() / 2 - frame.getWidth() / 2,
+				(int) location.getHeight() / 2 - frame.getHeight() / 2);
+		totalScore.setFont(new Font("bestFont", Font.BOLD, SCALE));
+		totalScore.setForeground(Color.BLUE);
+		totalScore.setHorizontalAlignment(JLabel.CENTER);
+		pauseText.setFont(new Font("bestFont", Font.BOLD, SCALE));
+		pauseText.setForeground(Color.BLUE);
+		totalScore.setHorizontalAlignment(JLabel.CENTER);
+		cherryScore.setFont(new Font("bestFont", Font.BOLD, SCALE));
+		cherryScore.setForeground(Color.BLUE);
+		cherryScore.setHorizontalAlignment(JLabel.CENTER);
+		cherryseaten.setFont(new Font("bestFont", Font.BOLD, SCALE));
+		cherryseaten.setForeground(Color.BLUE);
+		cherryseaten.setHorizontalAlignment(JLabel.CENTER);
+		statsDisplay.setBackground(Color.BLACK);
+		statsDisplay.setLayout(new GridLayout(3, 1));
+		render.add(pauseText);
+		statsDisplay.add(totalScore);
+		statsDisplay.add(cherryScore);
+		statsDisplay.add(cherryseaten);
+		split.setDividerSize(1);
+		split.setDividerLocation(COLUMN * SCALE + split.getDividerSize());
+		split.setLeftComponent(render);
+		split.setRightComponent(statsDisplay);
+		frame.add(split);
 		timer.start();
-		// System.out.println(this.getInsets());
+		frame.setSize(WIDTH + frame.getInsets().left + frame.getInsets().right,
+				HEIGHT + frame.getInsets().top + frame.getInsets().bottom);
 	}
 
 	private void restart() {
@@ -48,7 +74,8 @@ public class Snake extends JFrame implements ActionListener, KeyListener {
 		over = false;
 		pause = false;
 		direction = DOWN;
-		tailLength = 1;
+		tailLength = 4;
+		cherryValue = 100;
 		score = 0;
 		moved = true;
 		head = new Point(0, 0);
@@ -76,14 +103,14 @@ public class Snake extends JFrame implements ActionListener, KeyListener {
 				} else
 					over = true;
 			if (direction == RIGHT)
-				if (head.x + 1 < this.getContentPane().getWidth() / SCALE
+				if (head.x + 1 < split.getLeftComponent().getWidth() / SCALE
 						&& !tailAt(head.x + 1, head.y)) {
 					head = new Point(head.x + 1, head.y);
 					moved = true;
 				} else
 					over = true;
 			if (direction == DOWN)
-				if (head.y + 1 < this.getContentPane().getHeight() / SCALE
+				if (head.y + 1 < frame.getContentPane().getHeight() / SCALE
 						&& !tailAt(head.x, head.y + 1)) {
 					head = new Point(head.x, head.y + 1);
 					moved = true;
@@ -96,9 +123,7 @@ public class Snake extends JFrame implements ActionListener, KeyListener {
 				} else
 					over = true;
 			while (cherry == null) {
-				cherry = new Point(rand.nextInt(this.getContentPane()
-						.getWidth() / SCALE), rand.nextInt(this
-						.getContentPane().getHeight() / SCALE));
+				cherry = new Point(rand.nextInt(COLUMN), rand.nextInt(ROW));
 				for (Point point : SnakeParts) {
 					if (cherry.equals(point)) {
 						cherry = null;
@@ -106,14 +131,19 @@ public class Snake extends JFrame implements ActionListener, KeyListener {
 					}
 				}
 			}
-			if (cherry != null)
+			if (cherry != null) {
+				cherryValue--;
 				if (head.equals(cherry)) {
 					tailLength++;
-					score += 100;
+					score = score + cherryValue;
+					cherryValue = 100;
 					cherry = null;
 				}
-			scoreText = "Score: " + score + ", Taillength: " + tailLength;
-			screenScore.setText(scoreText);
+			}
+			scoreText = "Total Score: " + score;
+			totalScore.setText(scoreText);
+			cherryScore.setText("next Cherry: " + cherryValue);
+			cherryseaten.setText("Cherry's eaten: " + (tailLength - 4));
 		}
 		// System.out.println(head.x + ", " + head.y);
 		// if(cherry != null)
@@ -147,11 +177,10 @@ public class Snake extends JFrame implements ActionListener, KeyListener {
 			if (!over)
 				if (!pause) {
 					pause = true;
-					if (!scoreText.contains("PAUSED"))
-						scoreText = scoreText + "\t PAUSED";
-					screenScore.setText(scoreText);
+					pauseText.setText("PAUSED");
 					timer.stop();
 				} else {
+					pauseText.setText("");
 					pause = false;
 					if (!timer.isRunning())
 						timer.start();
@@ -170,5 +199,6 @@ public class Snake extends JFrame implements ActionListener, KeyListener {
 
 	public static void main(String[] args) {
 		Snake snake = new Snake();
+		snake.restart();
 	}
 }
