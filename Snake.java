@@ -5,14 +5,17 @@ import java.util.Random;
 import javax.swing.*;
 
 public class Snake implements ActionListener, KeyListener {
+	
+	public static final int SCALE = 38, ROW = 25, COLUMN = 25, SPEED = 90; //Sets values for the size of the board
+	public static final int DOWN = 0, UP = 1, RIGHT = 2, LEFT = 3; //sets values for directions
 
-	public static final int SCALE = 38, ROW = 25, COLUMN = 25, SPEED = 90;
-	public static final int DOWN = 0, UP = 1, RIGHT = 2, LEFT = 3;
-
-	public static ArrayList<Point> SnakeParts = new ArrayList<Point>();
+	public static ArrayList<Point> SnakeParts = new ArrayList<Point>(); // represents the snake's body
 	public static Point cherry;
-	public static int direction = DOWN;
+	public static int direction = DOWN; //snake starts going downward
 
+	/*
+	 * Setting variables that will be used to initialize the GUI
+	 */
 	private String scoreText;
 	private Timer timer;
 	private JFrame frame = new JFrame("Snake");
@@ -25,13 +28,23 @@ public class Snake implements ActionListener, KeyListener {
 	private JLabel cherryseaten = new JLabel();
 	private PaintGame render = new PaintGame();
 	private Dimension location = Toolkit.getDefaultToolkit().getScreenSize();
-	private Point head = new Point(0, 0);
+	private Point head = new Point(0, 0); // starts the snake at point (0,0) on the grid
 
+	/*
+	 * Finalizes board size
+	 * initializes snake length 4, score to 0, and counter to 100
+	 * sets snake moving to true 
+	 */
 	private boolean over = false, pause = false, moved = true;
 	private final int WIDTH = COLUMN * SCALE + 10 * SCALE,
 			HEIGHT = ROW * SCALE;
 	private int tailLength = 4, cherryValue = 100, score = 0;
 
+	/*
+	 * creates the main GUI
+	 * Adjusts all the label settings
+	 * starts the timer
+	 */
 	Snake() {
 		timer = new Timer(SPEED, this);
 		frame.addKeyListener(this);
@@ -69,6 +82,9 @@ public class Snake implements ActionListener, KeyListener {
 				HEIGHT + frame.getInsets().top + frame.getInsets().bottom);
 	}
 
+	/*
+	 * returns all variables to their starting values
+	 */
 	private void restart() {
 		SnakeParts.clear();
 		over = false;
@@ -82,6 +98,10 @@ public class Snake implements ActionListener, KeyListener {
 		cherry = null;
 	}
 
+	/*
+	 * returns true if any part of the snake is on the given coordinates
+	 * returns false if the given coordinates don't contain any snake parts
+	 */
 	private boolean tailAt(int x, int y) {
 		for (Point point : SnakeParts)
 			if (point.x == x && point.y == y)
@@ -89,13 +109,24 @@ public class Snake implements ActionListener, KeyListener {
 		return false;
 	}
 
+	/*
+	 * This Block of code makes the snake respond to actions the user makes
+	 */
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (!over && !pause) {
+		if (!over && !pause) { //will not run if game is paused or over
 			render.repaint();
+			
+			//Adds location of head to the snake body
+			//uses the comparison of size of snake to tail length to determine if a cherry has been collected
+			//if cherry is collected the last point of the snake is removed so snake length is consistent
+			//if cherry was collected the last part of the snake remains so the snake grows by one
 			SnakeParts.add(new Point(head.x, head.y));
 			if (SnakeParts.size() > tailLength + 1)
 				SnakeParts.remove(0);
+			
+			//Moves snake one position in the direction it was moving
+			//if snake hits the wall or its own tail ends the game
 			if (direction == LEFT)
 				if (head.x - 1 >= 0 && !tailAt(head.x - 1, head.y)) {
 					head = new Point(head.x - 1, head.y);
@@ -122,6 +153,9 @@ public class Snake implements ActionListener, KeyListener {
 					moved = true;
 				} else
 					over = true;
+			
+			//Sets a new random location for the cherry
+			//if new point was on the snake a new point is selected
 			while (cherry == null) {
 				cherry = new Point(rand.nextInt(COLUMN), rand.nextInt(ROW));
 				for (Point point : SnakeParts) {
@@ -131,8 +165,17 @@ public class Snake implements ActionListener, KeyListener {
 					}
 				}
 			}
+			
+			//decreases the value of the cherry if it has not been collected
 			if (cherry != null) {
 				cherryValue--;
+				
+				//checks if cherry is collected
+				//increases the tail length
+				//adds the current value of the cherry to your score
+				//resets the value of the cherry to 100
+				//sets the cherry to null so it can be replaced
+				
 				if (head.equals(cherry)) {
 					tailLength++;
 					score = score + cherryValue;
@@ -140,6 +183,8 @@ public class Snake implements ActionListener, KeyListener {
 					cherry = null;
 				}
 			}
+			
+			//Updates the side panel
 			scoreText = "Total Score: " + score;
 			totalScore.setText(scoreText);
 			cherryScore.setText("next Cherry: " + cherryValue);
@@ -150,6 +195,11 @@ public class Snake implements ActionListener, KeyListener {
 		// System.out.println(cherry.x + ", " + cherry.y);
 	}
 
+	/*
+	 * Changes direction of the snake if keys (A,S,W,D or Up, Down, Left, Right) are clicked
+	 * If the space bar is clicked, pauses, unpauses, or restarts depending on the game state
+	 */
+	
 	@Override
 	public void keyPressed(KeyEvent e) {
 		int key = e.getKeyCode();
